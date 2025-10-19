@@ -4,3 +4,6 @@
 [submodule "user-service"]
 	path = user-service
 	url = https://github.com/AlexisChartier/eventy-user-service
+[submodule "eventy-user-service"]
+	path = eventy-user-service
+	url = https://github.com/AlexisChartier/eventy-user-service
