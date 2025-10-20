@@ -1,0 +1,6 @@
+[submodule "api-gateway"]
+	path = api-gateway
+	url = https://github.com/AlexisChartier/api-gateway
+[submodule "eventy-user-service"]
+	path = eventy-user-service
+	url = https://github.com/AlexisChartier/eventy-user-service
