@@ -38,7 +38,7 @@ The Eventy backend follows a microservices pattern with the following services:
          │
     ┌────┴────┬────────┬─────────┬──────────────┐
     │         │        │         │              │
-┌───▼───┐ ┌──▼───┐ ┌──▼────┐ ┌──▼─────────┐ ┌─▼──────────┐
+┌───▼───┐ ┌───▼──┐ ┌───▼───┐ ┌───▼────────┐ ┌───▼────────┐
 │ Users │ │Events│ │Tickets│ │Transactions│ │Interactions│
 └───┬───┘ └──┬───┘ └──┬────┘ └──┬─────────┘ └─┬──────────┘
     │        │        │         │              │
