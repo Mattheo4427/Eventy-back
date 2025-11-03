@@ -4,3 +4,18 @@
 [submodule "eventy-user-service"]
 	path = eventy-user-service
 	url = https://github.com/AlexisChartier/eventy-user-service
+[submodule "eventy-users-service"]
+	path = eventy-users-service
+	url = https://github.com/Mattheo4427/eventy-users-service.git
+[submodule "eventy-events-service"]
+	path = eventy-events-service
+	url = https://github.com/Mattheo4427/eventy-events-service.git
+[submodule "eventy-tickets-service"]
+	path = eventy-tickets-service
+	url = https://github.com/Mattheo4427/eventy-tickets-service.git
+[submodule "eventy-transactions-service"]
+	path = eventy-transactions-service
+	url = https://github.com/Mattheo4427/eventy-transactions-service.git
+[submodule "eventy-interactions-service"]
+	path = eventy-interactions-service
+	url = https://github.com/Mattheo4427/eventy-interactions-service.git
