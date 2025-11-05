@@ -1,0 +1,243 @@
+version: "3.9"
+
+services:
+  # ===============================
+  # 🐘 PostgreSQL Databases
+  # ===============================
+  events-postgres:
+    image: postgres:15-alpine
+    container_name: events-postgres
+    environment:
+      POSTGRES_DB: ${EVENTS_DB_NAME}
+      POSTGRES_USER: ${EVENTS_DB_USER}
+      POSTGRES_PASSWORD: ${EVENTS_DB_PASSWORD}
+    ports:
+      - "${EVENTS_DB_PORT}:5432"
+    volumes:
+      - events_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${EVENTS_DB_USER} -d ${EVENTS_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - eventy-network
+
+  users-postgres:
+    image: postgres:15-alpine
+    container_name: users-postgres
+    environment:
+      POSTGRES_DB: ${USERS_DB_NAME}
+      POSTGRES_USER: ${USERS_DB_USER}
+      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD}
+    ports:
+      - "${USERS_DB_PORT}:5432"
+    volumes:
+      - users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USERS_DB_USER} -d ${USERS_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - eventy-network
+
+  tickets-postgres:
+    image: postgres:15-alpine
+    container_name: tickets-postgres
+    environment:
+      POSTGRES_DB: ${TICKETS_DB_NAME}
+      POSTGRES_USER: ${TICKETS_DB_USER}
+      POSTGRES_PASSWORD: ${TICKETS_DB_PASSWORD}
+    ports:
+      - "${TICKETS_DB_PORT}:5432"
+    volumes:
+      - tickets_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TICKETS_DB_USER} -d ${TICKETS_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - eventy-network
+
+  transactions-postgres:
+    image: postgres:15-alpine
+    container_name: transactions-postgres
+    environment:
+      POSTGRES_DB: ${TRANSACTIONS_DB_NAME}
+      POSTGRES_USER: ${TRANSACTIONS_DB_USER}
+      POSTGRES_PASSWORD: ${TRANSACTIONS_DB_PASSWORD}
+    ports:
+      - "${TRANSACTIONS_DB_PORT}:5432"
+    volumes:
+      - transactions_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TRANSACTIONS_DB_USER} -d ${TRANSACTIONS_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - eventy-network
+
+  interactions-postgres:
+    image: postgres:15-alpine
+    container_name: interactions-postgres
+    environment:
+      POSTGRES_DB: ${INTERACTIONS_DB_NAME}
+      POSTGRES_USER: ${INTERACTIONS_DB_USER}
+      POSTGRES_PASSWORD: ${INTERACTIONS_DB_PASSWORD}
+    ports:
+      - "${INTERACTIONS_DB_PORT}:5432"
+    volumes:
+      - interactions_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${INTERACTIONS_DB_USER} -d ${INTERACTIONS_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - eventy-network
+
+  # ===============================
+  # 🧩 Microservices
+  # ===============================
+
+  eventy-events-service:
+    build:
+      context: ./eventy-events-service
+      dockerfile: Dockerfile
+    container_name: eventy-events-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://events-postgres:5432/${EVENTS_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${EVENTS_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${EVENTS_DB_PASSWORD}
+      SERVER_PORT: ${EVENTS_SERVICE_PORT}
+    ports:
+      - "${EVENTS_SERVICE_PORT}:8082"
+    depends_on:
+      events-postgres:
+        condition: service_healthy
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+  eventy-users-service:
+    build:
+      context: ./eventy-users-service
+      dockerfile: Dockerfile
+    container_name: eventy-users-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users-postgres:5432/${USERS_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${USERS_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${USERS_DB_PASSWORD}
+      SERVER_PORT: ${USERS_SERVICE_PORT}
+    ports:
+      - "${USERS_SERVICE_PORT}:8083"
+    depends_on:
+      users-postgres:
+        condition: service_healthy
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+  eventy-tickets-service:
+    build:
+      context: ./eventy-tickets-service
+      dockerfile: Dockerfile
+    container_name: eventy-tickets-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tickets-postgres:5432/${TICKETS_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${TICKETS_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${TICKETS_DB_PASSWORD}
+      SERVER_PORT: ${TICKETS_SERVICE_PORT}
+    ports:
+      - "${TICKETS_SERVICE_PORT}:8084"
+    depends_on:
+      tickets-postgres:
+        condition: service_healthy
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+  eventy-transactions-service:
+    build:
+      context: ./eventy-transactions-service
+      dockerfile: Dockerfile
+    container_name: eventy-transactions-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://transactions-postgres:5432/${TRANSACTIONS_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${TRANSACTIONS_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${TRANSACTIONS_DB_PASSWORD}
+      SERVER_PORT: ${TRANSACTIONS_SERVICE_PORT}
+    ports:
+      - "${TRANSACTIONS_SERVICE_PORT}:8085"
+    depends_on:
+      transactions-postgres:
+        condition: service_healthy
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+  eventy-interactions-service:
+    build:
+      context: ./eventy-interactions-service
+      dockerfile: Dockerfile
+    container_name: eventy-interactions-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://interactions-postgres:5432/${INTERACTIONS_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${INTERACTIONS_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${INTERACTIONS_DB_PASSWORD}
+      SERVER_PORT: ${INTERACTIONS_SERVICE_PORT}
+    ports:
+      - "${INTERACTIONS_SERVICE_PORT}:8086"
+    depends_on:
+      interactions-postgres:
+        condition: service_healthy
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: ${GATEWAY_PORT}
+      EVENTS_SERVICE_URL: http://eventy-events-service:${EVENTS_SERVICE_PORT}
+      USERS_SERVICE_URL: http://eventy-users-service:${USERS_SERVICE_PORT}
+      TICKETS_SERVICE_URL: http://eventy-tickets-service:${TICKETS_SERVICE_PORT}
+      TRANSACTIONS_SERVICE_URL: http://eventy-transactions-service:${TRANSACTIONS_SERVICE_PORT}
+      INTERACTIONS_SERVICE_URL: http://eventy-interactions-service:${INTERACTIONS_SERVICE_PORT}
+    ports:
+      - "${GATEWAY_PORT}:8080"
+    depends_on:
+      - eventy-events-service
+      - eventy-users-service
+      - eventy-tickets-service
+      - eventy-transactions-service
+      - eventy-interactions-service
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+# ===============================
+# Volumes and Network
+# ===============================
+volumes:
+  events_data:
+  users_data:
+  tickets_data:
+  transactions_data:
+  interactions_data:
+
+networks:
+  eventy-network:
+    driver: bridge
