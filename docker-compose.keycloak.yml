@@ -1,0 +1,54 @@
+version: "3.9"
+
+# Ce fichier est 100% autonome pour lancer Keycloak et sa BDD.
+# Il n'a PAS besoin du docker-compose.yml principal.
+
+services:
+  keycloak-postgres:
+    image: postgres:15-alpine
+    container_name: keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5430:5432"
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    networks:
+      - keycloak-net # Utilise son propre réseau
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8090
+    ports:
+      - "8090:8090" # Console admin sur http://localhost:8090
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    networks:
+      - keycloak-net # Utilise son propre réseau
+    restart: unless-stopped
+
+volumes:
+  keycloak_data:
+
+# Nous créons le réseau ici au lieu de dépendre d'un réseau externe.
+networks:
+  keycloak-net:
+    driver: bridge
