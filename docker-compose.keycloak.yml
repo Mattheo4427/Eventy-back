@@ -1,12 +1,9 @@
 version: "3.9"
 
-# Ce fichier est 100% autonome pour lancer Keycloak et sa BDD.
-# Il n'a PAS besoin du docker-compose.yml principal.
-
 services:
   keycloak-postgres:
     image: postgres:15-alpine
-    container_name: keycloak-postgres
+    container_name: keycloak-postgres-standalone
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -14,20 +11,23 @@ services:
     ports:
       - "5430:5432"
     volumes:
-      - keycloak_data:/var/lib/postgresql/data
+      - keycloak_standalone_data:/var/lib/postgresql/data
     networks:
-      - keycloak-net # Utilise son propre réseau
+      - keycloak-standalone-network
+    # AJOUT: Healthcheck pour que le 'depends_on' fonctionne de manière fiable
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
-    container_name: keycloak
-    command: start-dev
+    container_name: keycloak-standalone
+    
+    # MODIFICATION 1: Ajout de '--import-realm' pour importer au démarrage
+    command: start-dev --import-realm
+    
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
@@ -37,18 +37,24 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_HTTP_PORT: 8090
     ports:
-      - "8090:8090" # Console admin sur http://localhost:8090
+      - "8090:8090"
+      
+    # MODIFICATION 2: Ajout d'un volume pour le fichier d'importation
+    volumes:
+      # Monte le dossier local 'keycloak-config' dans le dossier d'import du conteneur
+      - ./keycloak-config:/opt/keycloak/data/import
+      
     depends_on:
       keycloak-postgres:
+        # MODIFICATION 3: Attendre que la BDD soit saine avant de démarrer
         condition: service_healthy
+        
     networks:
-      - keycloak-net # Utilise son propre réseau
-    restart: unless-stopped
+      - keycloak-standalone-network
 
 volumes:
-  keycloak_data:
+  keycloak_standalone_data:
 
-# Nous créons le réseau ici au lieu de dépendre d'un réseau externe.
 networks:
-  keycloak-net:
+  keycloak-standalone-network:
     driver: bridge
