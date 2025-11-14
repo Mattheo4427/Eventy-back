@@ -22,6 +22,26 @@ services:
       retries: 3
     networks:
       - eventy-network
+  
+  keycloak-postgres:
+    image: postgres:15-alpine
+    container_name: keycloak-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password 
+    ports:
+      - "5430:5432"
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    networks:
+      - eventy-network 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
   users-postgres:
     image: postgres:15-alpine
@@ -102,6 +122,31 @@ services:
   # ===============================
   # 🧩 Microservices
   # ===============================
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: start-dev # Mode développement, pas pour la production
+    environment:
+      # Connexion à la base de données
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password # Doit correspondre à celui de keycloak-postgres
+      
+      # Admin de la console Keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      
+      # Port (pour éviter le conflit avec la gateway sur 8080)
+      KC_HTTP_PORT: 8090
+    ports:
+      - "8090:8090" # Accès à la console d'admin via http://localhost:8090
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    networks:
+      - eventy-network
+    restart: unless-stopped
 
   eventy-events-service:
     build:
@@ -237,7 +282,7 @@ volumes:
   tickets_data:
   transactions_data:
   interactions_data:
-
+  keycloak_data:
 networks:
   eventy-network:
     driver: bridge
