@@ -19,3 +19,6 @@
 [submodule "eventy-interactions-service"]
 	path = eventy-interactions-service
 	url = https://github.com/Mattheo4427/eventy-interactions-service.git
+[submodule "eventy-keycloak-service"]
+	path = eventy-keycloak-service
+	url = git@github.com:Mattheo4427/eventy-keycloak-service.git
