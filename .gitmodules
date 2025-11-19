@@ -19,3 +19,6 @@
 [submodule "eventy-keycloak-service"]
 	path = eventy-keycloak-service
 	url = https://github.com/Mattheo4427/eventy-keycloak-service.git
+[submodule "eventy-eureka-service"]
+	path = eventy-eureka-service
+	url = https://github.com/AlexisChartier/eventy-eureka-service.git
