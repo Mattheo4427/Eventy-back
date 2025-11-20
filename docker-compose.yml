@@ -171,7 +171,7 @@ services:
     container_name: eventy-events-service
     environment:
       # CONFIGURATION EUREKA CLIENT
-      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
+      EUREKA_DEFAULT_ZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://events-postgres:5432/${EVENTS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${EVENTS_DB_USER}
@@ -197,7 +197,7 @@ services:
       DATABASE_URL: jdbc:postgresql://users-postgres:5432/${USERS_DB_NAME}
       JWT_ISSUER_URI: http://keycloak:8090/realms/eventy-realm
       # CONFIGURATION EUREKA CLIENT
-      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
+      EUREKA_DEFAULT_ZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://users-postgres:5432/${USERS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${USERS_DB_USER}
@@ -221,7 +221,7 @@ services:
     container_name: eventy-tickets-service
     environment:
       # CONFIGURATION EUREKA CLIENT
-      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
+      EUREKA_DEFAULT_ZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://tickets-postgres:5432/${TICKETS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${TICKETS_DB_USER}
@@ -245,7 +245,7 @@ services:
     container_name: eventy-transactions-service
     environment:
       # CONFIGURATION EUREKA CLIENT
-      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
+      EUREKA_DEFAULT_ZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://transactions-postgres:5432/${TRANSACTIONS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${TRANSACTIONS_DB_USER}
@@ -269,7 +269,7 @@ services:
     container_name: eventy-interactions-service
     environment:
       # CONFIGURATION EUREKA CLIENT
-      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
+      EUREKA_DEFAULT_ZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://interactions-postgres:5432/${INTERACTIONS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${INTERACTIONS_DB_USER}
@@ -293,7 +293,7 @@ services:
     container_name: api-gateway
     environment:
       # CONFIGURATION EUREKA CLIENT
-      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
+      EUREKA_DEFAULT_ZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: ${GATEWAY_PORT}
     ports:
