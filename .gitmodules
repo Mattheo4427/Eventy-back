@@ -22,3 +22,4 @@
 [submodule "eventy-eureka-service"]
 	path = eventy-eureka-service
 	url = https://github.com/AlexisChartier/eventy-eureka-service.git
+	branch = main
