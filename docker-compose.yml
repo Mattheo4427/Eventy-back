@@ -122,25 +122,41 @@ services:
   # ===============================
   # 🧩 Microservices
   # ===============================
-  keycloak:
-    image: quay.io/keycloak/keycloak:latest
-    container_name: keycloak
-    command: start-dev # Mode développement, pas pour la production
-    environment:
-      # Connexion à la base de données
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password # Doit correspondre à celui de keycloak-postgres
-      
-      # Admin de la console Keycloak
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      
-      # Port (pour éviter le conflit avec la gateway sur 8080)
-      KC_HTTP_PORT: 8090
+  eventy-eureka-service:
+    build:
+      context: ./eventy-eureka-service 
+      dockerfile: Dockerfile
+    container_name: eventy-eureka-service
     ports:
-      - "8090:8090" # Accès à la console d'admin via http://localhost:8090
+      - "${EUREKA_SERVICE_PORT}:8761" # Utilise la variable du .env
+    environment:
+      SERVER_PORT: 8761
+      SPRING_APPLICATION_NAME: eventy-eureka-service
+    networks:
+      - eventy-network
+    restart: unless-stopped
+
+  keycloak:
+    build:
+      context: ./eventy-keycloak-service 
+      dockerfile: Dockerfile
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/${POSTGRES_DB} # Utilise les variables BDD
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_PORT: 8090
+      
+      # Configuration pour le SPI UserSyncEventListener
+      USER_SERVICE_URL: http://eventy-users-service:8083 # Point d'accès interne
+      KEYCLOAK_SYNC_SECRET: ${KEYCLOAK_SYNC_SECRET}
+      
+    ports:
+      - "${KEYCLOAK_PORT}:8090" # Utilise la variable du .env
     depends_on:
       keycloak-postgres:
         condition: service_healthy
@@ -154,6 +170,8 @@ services:
       dockerfile: Dockerfile
     container_name: eventy-events-service
     environment:
+      # CONFIGURATION EUREKA CLIENT
+      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://events-postgres:5432/${EVENTS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${EVENTS_DB_USER}
@@ -164,6 +182,8 @@ services:
     depends_on:
       events-postgres:
         condition: service_healthy
+      eventy-eureka-service:
+        condition: service_started
     networks:
       - eventy-network
     restart: unless-stopped
@@ -174,6 +194,10 @@ services:
       dockerfile: Dockerfile
     container_name: eventy-users-service
     environment:
+      DATABASE_URL: jdbc:postgresql://users-postgres:5432/${USERS_DB_NAME}
+      JWT_ISSUER_URI: http://keycloak:8090/realms/eventy-realm
+      # CONFIGURATION EUREKA CLIENT
+      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://users-postgres:5432/${USERS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${USERS_DB_USER}
@@ -184,6 +208,8 @@ services:
     depends_on:
       users-postgres:
         condition: service_healthy
+      eventy-eureka-service:
+        condition: service_started
     networks:
       - eventy-network
     restart: unless-stopped
@@ -194,6 +220,8 @@ services:
       dockerfile: Dockerfile
     container_name: eventy-tickets-service
     environment:
+      # CONFIGURATION EUREKA CLIENT
+      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://tickets-postgres:5432/${TICKETS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${TICKETS_DB_USER}
@@ -204,6 +232,8 @@ services:
     depends_on:
       tickets-postgres:
         condition: service_healthy
+      eventy-eureka-service:
+        condition: service_started
     networks:
       - eventy-network
     restart: unless-stopped
@@ -214,6 +244,8 @@ services:
       dockerfile: Dockerfile
     container_name: eventy-transactions-service
     environment:
+      # CONFIGURATION EUREKA CLIENT
+      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://transactions-postgres:5432/${TRANSACTIONS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${TRANSACTIONS_DB_USER}
@@ -224,6 +256,8 @@ services:
     depends_on:
       transactions-postgres:
         condition: service_healthy
+      eventy-eureka-service:
+        condition: service_started
     networks:
       - eventy-network
     restart: unless-stopped
@@ -234,6 +268,8 @@ services:
       dockerfile: Dockerfile
     container_name: eventy-interactions-service
     environment:
+      # CONFIGURATION EUREKA CLIENT
+      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://interactions-postgres:5432/${INTERACTIONS_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${INTERACTIONS_DB_USER}
@@ -244,6 +280,8 @@ services:
     depends_on:
       interactions-postgres:
         condition: service_healthy
+      eventy-eureka-service:
+        condition: service_started
     networks:
       - eventy-network
     restart: unless-stopped
@@ -254,21 +292,25 @@ services:
       dockerfile: Dockerfile
     container_name: api-gateway
     environment:
+      # CONFIGURATION EUREKA CLIENT
+      SPRING_EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eventy-eureka-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: ${GATEWAY_PORT}
-      EVENTS_SERVICE_URL: http://eventy-events-service:${EVENTS_SERVICE_PORT}
-      USERS_SERVICE_URL: http://eventy-users-service:${USERS_SERVICE_PORT}
-      TICKETS_SERVICE_URL: http://eventy-tickets-service:${TICKETS_SERVICE_PORT}
-      TRANSACTIONS_SERVICE_URL: http://eventy-transactions-service:${TRANSACTIONS_SERVICE_PORT}
-      INTERACTIONS_SERVICE_URL: http://eventy-interactions-service:${INTERACTIONS_SERVICE_PORT}
     ports:
       - "${GATEWAY_PORT}:8080"
     depends_on:
-      - eventy-events-service
-      - eventy-users-service
-      - eventy-tickets-service
-      - eventy-transactions-service
-      - eventy-interactions-service
+      eventy-eureka-service:
+        condition: service_started
+      eventy-events-service:
+        condition: service_started
+      eventy-users-service:
+        condition: service_started
+      eventy-tickets-service:
+        condition: service_started
+      eventy-transactions-service:
+        condition: service_started
+      eventy-interactions-service:
+        condition: service_started
     networks:
       - eventy-network
     restart: unless-stopped
