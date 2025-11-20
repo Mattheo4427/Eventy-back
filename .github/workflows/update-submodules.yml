@@ -22,7 +22,7 @@ jobs:
       - name: Commit submodule updates
         run: |
           cd Eventy-back
-          git add eventy-users-service eventy-events-service eventy-tickets-service eventy-transactions-service eventy-interactions-service eventy-keycloak-service
+          git add eventy-eureka-service eventy-users-service eventy-events-service eventy-tickets-service eventy-transactions-service eventy-interactions-service eventy-keycloak-service
           git diff-index --quiet HEAD || git commit -m "chore: update microservices submodules [skip ci]"
       
       - name: Push changes
