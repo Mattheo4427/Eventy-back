@@ -203,12 +203,21 @@ services:
       SPRING_DATASOURCE_USERNAME: ${USERS_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${USERS_DB_PASSWORD}
       SERVER_PORT: ${USERS_SERVICE_PORT}
+      KEYCLOAK_SERVER_URL: ${KEYCLOAK_INTERNAL_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_TARGET_REALM}
+      KEYCLOAK_ADMIN_REALM: ${KEYCLOAK_ADMIN_REALM}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID}
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_SYNC_SECRET: ${KEYCLOAK_SYNC_SECRET}
     ports:
       - "${USERS_SERVICE_PORT}:8083"
     depends_on:
       users-postgres:
         condition: service_healthy
       eventy-eureka-service:
+        condition: service_started
+      keycloak:
         condition: service_started
     networks:
       - eventy-network
